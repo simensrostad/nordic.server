@@ -47,8 +47,14 @@ public class SecureServer {
 		
 		CoapServer server = new CoapServer();
 		server.add(new StorageResource("iot_publisher"));
-
-		if(!SUPPORTED_MODES.contains(Mode.NO_DTLS)) {
+		
+		boolean dtls = true;
+		
+		if(SUPPORTED_MODES.contains(Mode.NO_DTLS)) {
+			dtls = false;
+		}
+		
+		if(dtls) {
 			DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder();
 			CredentialsUtil.setupCid(args, builder);
 			builder.setAddress(new InetSocketAddress(DTLS_PORT));
@@ -62,12 +68,13 @@ public class SecureServer {
 
 		server.start();
 
-		// add special intercepter for message traces
-		for (Endpoint ep : server.getEndpoints()) {
-			ep.addInterceptor(new MessageTracer());
+		if(dtls) {
+			// add special intercepter for message traces
+			for (Endpoint ep : server.getEndpoints()) {
+				ep.addInterceptor(new MessageTracer());
+			}
 		}
 
 		System.out.println("Secure CoAP server powered by Scandium (Sc) is listening on port " + DTLS_PORT);
 	}
-
 }
