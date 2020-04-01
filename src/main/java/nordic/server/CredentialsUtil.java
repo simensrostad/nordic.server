@@ -349,7 +349,7 @@ public class CredentialsUtil {
 				suites.addAll(CipherSuite.getCipherSuitesByKeyExchangeAlgorithm(false, KeyExchangeAlgorithm.ECDHE_PSK));
 			}
 			if (plainPsk) {
-				suites.addAll(CipherSuite.getCipherSuitesByKeyExchangeAlgorithm(false, KeyExchangeAlgorithm.PSK));
+				suites.add(CipherSuite.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256);
 			}
 			config.setSupportedCipherSuites(suites);
 		}
