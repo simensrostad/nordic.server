@@ -35,28 +35,31 @@ import nordic.server.resources.StorageResource;
 public class SecureServer {
 
 	public static final List<Mode> SUPPORTED_MODES = Arrays
-			.asList(new Mode[] { Mode.PSK, Mode.ECDHE_PSK, Mode.RPK, Mode.X509, Mode.NO_AUTH });
+			.asList(new Mode[] { Mode.PSK, Mode.ECDHE_PSK, Mode.RPK, Mode.X509, Mode.NO_AUTH, Mode.WANT_AUTH, Mode.NO_DTLS });
 
 	// allows configuration via Californium.properties
 	public static final int DTLS_PORT = NetworkConfig.getStandard().getInt(NetworkConfig.Keys.COAP_SECURE_PORT);
 
 	public static void main(String[] args) {
 
-		System.out.println("Usage: java -jar ... [PSK] [ECDHE_PSK] [RPK] [X509] [NO_AUTH]");
+		System.out.println("Usage: java -jar ... [PSK] [ECDHE_PSK] [RPK] [X509] [NO_AUTH] [WANT_AUTH] [NO_DTLS]  ");
 		System.out.println("Default :            [PSK] [ECDHE_PSK] [RPK] [X509]");
 		
 		CoapServer server = new CoapServer();
 		server.add(new StorageResource("iot_publisher"));
-		
-		DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder();
-		CredentialsUtil.setupCid(args, builder);
-		builder.setAddress(new InetSocketAddress(DTLS_PORT));
-		List<Mode> modes = CredentialsUtil.parse(args, CredentialsUtil.DEFAULT_SERVER_MODES, SUPPORTED_MODES);
-		CredentialsUtil.setupCredentials(builder, CredentialsUtil.SERVER_NAME, modes);
-		DTLSConnector connector = new DTLSConnector(builder.build());
-		CoapEndpoint.Builder coapBuilder = new CoapEndpoint.Builder();
-		coapBuilder.setConnector(connector);
-		server.addEndpoint(coapBuilder.build());
+
+		if(!SUPPORTED_MODES.contains(Mode.NO_DTLS)) {
+			DtlsConnectorConfig.Builder builder = new DtlsConnectorConfig.Builder();
+			CredentialsUtil.setupCid(args, builder);
+			builder.setAddress(new InetSocketAddress(DTLS_PORT));
+			List<Mode> modes = CredentialsUtil.parse(args, CredentialsUtil.DEFAULT_SERVER_MODES, SUPPORTED_MODES);
+			CredentialsUtil.setupCredentials(builder, CredentialsUtil.SERVER_NAME, modes);
+			DTLSConnector connector = new DTLSConnector(builder.build());
+			CoapEndpoint.Builder coapBuilder = new CoapEndpoint.Builder();
+			coapBuilder.setConnector(connector);
+			server.addEndpoint(coapBuilder.build());
+		}
+
 		server.start();
 
 		// add special intercepter for message traces
